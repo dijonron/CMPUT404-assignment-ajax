@@ -22,7 +22,7 @@
 
 
 import flask
-from flask import Flask, request
+from flask import Flask, request, redirect
 import json
 app = Flask(__name__)
 app.debug = True
@@ -33,12 +33,13 @@ app.debug = True
 #    'b':{'x':2, 'y':3}
 # }
 
+
 class World:
     def __init__(self):
         self.clear()
-        
+
     def update(self, entity, key, value):
-        entry = self.space.get(entity,dict())
+        entry = self.space.get(entity, dict())
         entry[key] = value
         self.space[entity] = entry
 
@@ -49,15 +50,15 @@ class World:
         self.space = dict()
 
     def get(self, entity):
-        return self.space.get(entity,dict())
-    
+        return self.space.get(entity, dict())
+
     def world(self):
         return self.space
 
 # you can test your webservice from the commandline
-# curl -v   -H "Content-Type: application/json" -X PUT http://127.0.0.1:5000/entity/X -d '{"x":1,"y":1}' 
+# curl -v   -H "Content-Type: application/json" -X PUT http://127.0.0.1:5000/entity/X -d '{"x":1,"y":1}'
 
-myWorld = World()          
+myWorld = World()
 
 # I give this to you, this is how you get the raw body/data portion of a post in flask
 # this should come with flask but whatever, it's not my project.
@@ -71,30 +72,40 @@ def flask_post_json():
     else:
         return json.loads(request.form.keys()[0])
 
+
 @app.route("/")
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
-    return None
+    return redirect("/static/index.html", code=302)
 
-@app.route("/entity/<entity>", methods=['POST','PUT'])
+
+@app.route("/entity/<entity>", methods=['POST', 'PUT'])
 def update(entity):
     '''update the entities via this interface'''
-    return None
+    data = flask_post_json()
+    for key in data:
+        myWorld.update(entity, key, data[key])
+    return flask_post_json(), 200
 
-@app.route("/world", methods=['POST','GET'])    
+
+@app.route("/world", methods=['POST', 'GET'])
 def world():
     '''you should probably return the world here'''
-    return None
+    return myWorld.world(), 200
 
-@app.route("/entity/<entity>")    
+
+@app.route("/entity/<entity>")
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return None
+    return myWorld.get(entity), 200
 
-@app.route("/clear", methods=['POST','GET'])
+
+@app.route("/clear", methods=['POST', 'GET'])
 def clear():
     '''Clear the world out!'''
-    return None
+    myWorld.clear()
+    return myWorld.world(), 200
+
 
 if __name__ == "__main__":
     app.run()

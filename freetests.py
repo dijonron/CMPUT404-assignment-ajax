@@ -65,7 +65,7 @@ class ServerTestCase(unittest.TestCase):
         self.assertTrue(r.status_code == 200, "Code not 200!")
         self.assertTrue(json.loads(utf8(r.data)) == d, "D != r.data")
 
-        
+
     def populateWorld(self):
         self.world = dict()
         for i in range(1,20):
@@ -85,17 +85,13 @@ class ServerTestCase(unittest.TestCase):
                              data=json.dumps(self.world[key]))
             self.assertTrue(r.status_code == 200, "Code not 200!")
             j = json.loads(utf8(r.data))
-            self.assertTrue(len(j.keys()) >= 3,"JSON lacking keys! %s" % j.keys())
+            self.assertTrue(len(j.keys()) >= 3, "JSON lacking keys! %s" % j.keys())
         r = self.app.get('/world')
         self.assertTrue(r.status_code == 200, "Code not 200!")
         newworld = json.loads(utf8(r.data))
         for key in self.world:
-            self.assertTrue(self.world[key]  == newworld[key], "Key %s" % key)
+            self.assertTrue(self.world[key] == newworld[key], "Key %s" % key)
 
-
-        
-        
-        
 
 if __name__ == '__main__':
     unittest.main()
