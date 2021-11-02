@@ -9,7 +9,8 @@
     <meta name="viewport" content="width=device-width" />
     <meta name="license" content="
         Copyright 2013 Abram Hindle
-        
+        Copyright 2021 Dalton Ronan
+
         Licensed under the Apache License, Version 2.0 (the " License"); you may not use this file except in compliance
         with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless
         required by applicable law or agreed to in writing, software distributed under the License is distributed on
@@ -28,27 +29,19 @@
         var W = canvas.width = window.innerWidth - 6;
         var H = canvas.height = window.innerHeight - 50;
 
+        // let's try using fetch and async/await
+        const fetchJSON = async (url, objects) => {
+            // destructure request params and provide some defaults
+            const { method, body, contentType = "application/json", accept = "application/json" } = objects
 
-        function sendJSONXMLHTTPRequest(url, objects, callback) {
-            var xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState == 4) {
-                    try {
-                        if (xhr.status == 200) {
-                            //XXX: parse some JSON from the request!
-                            console.log('a')
-                            //XXX: Pass the data to the callback!
-                        }
-                    }
-                    catch (e) {
-                        alert('Error: ' + e.name);
-                    }
-                }
-            };
-            //XXX: POST to a URL
+            var req = new Request(url, { method, body: JSON.stringify(body), headers: { contentType, accept } })
+            const res = await fetch(req)
 
-            //XXX: set the mimetype and the accept headers!
-            // Remember to use application/json !
+            if (res.status == 200) {
+                return res.json()
+            } else {
+                alert(`Error: Something went wrong. (${res.status})`)
+            }
         }
 
 
@@ -115,7 +108,6 @@
 
         // This is unpleasent, canvas clicks are not handled well
         // So use this code, it works well on multitouch devices as well.
-
         function getPosition(e) {
             if (e.targetTouches && e.targetTouches.length > 0) {
                 var touch = e.targetTouches[0];
@@ -133,11 +125,12 @@
         }
 
 
-        function addEntity(entity, data) {
+        async function addEntity(entity, data) {
             world[entity] = data;
             drawNextFrame(); // (but should we?)
             //XXX: Send a XHTML Request that updates the entity you just  modified!
-
+            const obj = { "method": "POST", "body": data }
+            await fetchJSON(`/entity/${entity}`, obj)
         }
 
         var counter = 0;
@@ -261,18 +254,17 @@
         });
 
 
-        function update() {
-            //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
-            // sendJSONXMLHTTPRequest(host)
-            console.log(host)
+        async function update() {
+            const getObj = { "method": "GET" }
+            // update the world
+            world = await fetchJSON("/world", getObj)
+            // force redraw? this seems wrong but it works fine?
+            drawNextFrame();
             drawFrame();
         }
 
         // 30 frames per second
         setInterval(update, 1000 / 30.0);
-
-
-
     </script>
 </body>
 
